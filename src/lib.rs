@@ -89,13 +89,6 @@ pub mod prelude {
     pub use super::Waitable as _;
 }
 
-#[doc(hidden)]
-#[deprecated(since = "0.1.1", note = "use `wait::prelude::*` instead")]
-pub mod preamble {
-    #[doc(hidden)]
-    pub use super::Waitable as _;
-}
-
 #[cfg(test)]
 mod tests {
     use super::prelude::*;
