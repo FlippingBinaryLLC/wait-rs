@@ -77,6 +77,8 @@ pub mod prelude {
     //!   assert_eq!(result, 4);
     //! }
     //! ```
+    //!
+    //! [`Waitable`]: super::Waitable
 
     pub use super::Waitable as _;
 }
