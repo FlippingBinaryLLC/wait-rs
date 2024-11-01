@@ -52,12 +52,8 @@ functions with `async`.
 
 Getting started with **Wait For Rust** is straightforward:
 
-1. Either install the crate from the command line or add the dependency to
-   your `Cargo.toml` manually:
-
-   ```shell
-   cargo add wait
-   ```
+1. Either add the crate with `cargo add wait` or add it to your `Cargo.toml`
+   manually:
 
    ```toml
    [dependencies]
