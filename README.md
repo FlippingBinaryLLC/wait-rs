@@ -61,7 +61,7 @@ Getting started with **Wait For Rust** is straightforward:
 
    ```toml
    [dependencies]
-   wait = "0.1"
+   wait = "0.2"
    ```
 
 2. Use the `.wait()` method on any `async` function instead of `.await`:
@@ -93,7 +93,7 @@ disable the default features in your `Cargo.toml`:
 
 ```toml
 [dependencies]
-wait = { version = "0.1", default-features = false }
+wait = { version = "0.2", default-features = false }
 ```
 
 This is not an ideal solution because it has to busy wait. The crate attempts
