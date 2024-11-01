@@ -1,66 +1,114 @@
-# Wait For Rust
+<h1 align="center">
+  <a href="https://github.com/FlippingBinaryLLC/wait-rs"><img
+    alt="A humanoid rests their chin in their hand, looking bored"
+    src="https://flippingbinary.com/wait-rs/logo-square.png" width="400"></a>
 
-The classic problem with `async` is the way that it colors every function it
-touches. Maybe your application is not I/O bound, so you don't want to make
-it `async`, but you want to use some library that happens to only export
-`async` functions.
+Wait For Rust
 
-What do you do?
+</h1>
 
-You could make your application fully `async`, but that seems like overkill
-for an application that is cpu-bound. You could call `block_on(async {})`
-from an `async` library, but that seems like a lot of overhead and
-boilerplate just to avoid coloring your functions.
+<p align="center">
+<a
+  href="https://github.com/FlippingBinaryLLC/wait-rs/actions?query=branch%3Amain"><img
+    alt="Build Status"
+    src="https://img.shields.io/github/actions/workflow/status/FlippingBinaryLLC/wait-rs/ci.yml?branch=main"></a>
+<a
+  href="https://crates.io/crates/wait"><img alt="Latest Release on crates.io"
+  src="https://img.shields.io/crates/v/wait.svg"></a>
+</p>
 
-On top of that, it can be dangerous to hold a `Mutex` lock across an `async`
-boundary. This can be frustrating when you have a `Mutex` that you want to
-hold for the duration of a function scope, but you need to call a function in
-an external library with only `async` functions.
+<p align="center">
+<a href="https://docs.rs/wait">
+  Documentation
+</a>
+</p>
 
-That's where this library comes in. It provides a little syntactic sugar that
-lets you easily wait on the results of an `async` function without coloring
-your functions with `async`.
+**Wait For Rust** simplifies the integration of asynchronous code into
+synchronous applications without the need to rewrite your entire application
+as `async`.
 
-Is this library necessary? Probably not. But this is more convenient than
-some alternatives.
+## Problem Statement
+
+In Rust, using `async` can be a double-edged sword. While it's powerful for
+I/O-bound operations, it can introduce unnecessary complexity in CPU-bound
+applications. You might want to use an external library that only provides
+`async` functions without making your entire application asynchronous.
+
+Common solutions include:
+
+- Making the entire application `async`, which adds overhead and complexity.
+- Using `block_on(async {})`, which introduces dependencies and boilerplate code.
+
+Additionally, holding a `Mutex` lock across an `async` boundary can be
+dangerous and lead to deadlocks or other concurrency issues.
+
+## Solution
+
+The **Wait For Rust** crate provides a simple and elegant solution. It allows
+you to call `async` functions from synchronous contexts without coloring your
+functions with `async`.
 
 ## Usage
 
-It's as easy as 1, 2, 3.
+Getting started with **Wait For Rust** is straightforward:
 
-**Step 1**: Add this to your `Cargo.toml`:
+1. Either install the crate from the command line or add the dependency to
+   your `Cargo.toml` manually:
 
-```toml
-[dependencies]
-wait = "0.1"
-```
+   ```shell
+   cargo add wait
+   ```
 
-**Step 2**: Add the prelude to the top of any file where you want to use it:
+   ```toml
+   [dependencies]
+   wait = "0.1"
+   ```
 
-```rust
-use wait::prelude::*;
-```
+2. Use the `.wait()` method on any `async` function instead of `.await`:
 
-**Step 3**: Use the `.wait()` method on any `async` function instead of `.await`.
+   ```rust
+   // The prelude attaches the `.wait()` method to all `async` functions
+   use wait::prelude::*;
 
-## Example
+   // Define an async function or use one from an external library
+   async fn add(a: i32, b: i32) -> i32 {
+       a + b
+   }
 
-```rust
-use wait::prelude::*;
+   fn main() {
+       // Call the async function using .wait()
+       let val = add(2, 2).wait();
+       println!("Result: {}", val);
+   }
+   ```
 
-async fn add(a: i32, b: i32) -> i32 {
-    a + b
-}
+3. ????
 
-fn main() {
-    let val = add(2, 2).wait();
-    println!("Result: {}", val);
-}
-```
+4. Profit
+
+## Is This Library Necessary?
+
+While you might not need this library for every project, it provides a
+convenient way to integrate `async` functions into synchronous code. This
+crate has no dependencies, so it won't add significantly to your build time.
+It also reduces the boilerplate and complexity that often comes with other
+solutions.
+
+## Acknowledgements
+
+This crate is built on the shoulders of giants. Rust futures are complicated,
+but popular libraries like `tokio`, `async-std`, and `futures-rs` are
+incredible resources for learning how futures work. We thank the maintainers
+and contributors of these libraries and the broader Rust community for all of
+their hard work and dedication. Additionally, the CI workflow for this
+repository is heavily based on the one in the `futures-rs` repository.
 
 ## License
 
-This library is distributed under the terms of either the
-[MIT](https://opensource.org/licenses/MIT) license, or the
-[Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) license, at your
-option.
+Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
+[MIT license](LICENSE-MIT) at your option.
+
+Unless you explicitly state otherwise, any contribution intentionally
+submitted for inclusion in the work by you, as defined in the Apache-2.0
+license, shall be dual licensed as above, without any additional terms or
+conditions.
