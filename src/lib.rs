@@ -23,7 +23,7 @@ impl Wake for ThreadWaker {
 /// trait. All `async` functions return a `Future`, so this attaches the
 /// `.wait()` method to every `async` function. When called, the `.wait()`
 /// puts the thread to sleep until the `Future` is ready to return a value.
-pub trait Waitable {
+pub trait Waitable: sealed::Sealed {
     /// This is set to the return type of the `Future`.
     type Output;
 
@@ -32,6 +32,8 @@ pub trait Waitable {
     where
         Self: Sized;
 }
+
+impl<F> sealed::Sealed for F where F: Future {}
 
 impl<F> Waitable for F
 where
@@ -57,6 +59,10 @@ where
             }
         }
     }
+}
+
+mod sealed {
+    pub trait Sealed {}
 }
 
 pub mod prelude {
