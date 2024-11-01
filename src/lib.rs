@@ -7,14 +7,14 @@ use core::{
 };
 
 #[cfg(feature = "std")]
-extern crate std;
-#[cfg(feature = "std")]
 extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std;
 
 #[cfg(feature = "std")]
-use std::{sync::Arc, task::Wake, thread};
-#[cfg(feature = "std")]
 use alloc::boxed::Box;
+#[cfg(feature = "std")]
+use std::{sync::Arc, task::Wake, thread};
 
 #[cfg(not(feature = "std"))]
 use core::{
