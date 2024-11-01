@@ -13,7 +13,7 @@ version = "0.1.1"
 exclude = [".gitignore", ".github", ".markdownlint.jsonc"]
 
 [lints.rust]
-unsafe_code = "forbid"
+unsafe_code = "deny"
 
 [badges]
 maintenance = { status = "passively-maintained" }
