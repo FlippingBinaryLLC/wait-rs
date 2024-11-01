@@ -10,6 +10,8 @@ repository = "https://github.com/FlippingBinaryLLC/wait-rs"
 rust-version = "1.56.1"
 version = "0.1.1"
 
+exclude = [".gitignore", ".github", ".markdownlint.jsonc"]
+
 [lints.rust]
 unsafe_code = "forbid"
 
