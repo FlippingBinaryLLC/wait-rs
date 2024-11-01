@@ -1,16 +1,41 @@
+#![no_std]
 #![doc = include_str!("../README.md")]
 
-use std::{
+use core::{
     future::Future,
-    sync::Arc,
-    task::{Context, Poll, Wake, Waker},
-    thread,
+    task::{Context, Poll, Waker},
 };
 
+#[cfg(feature = "std")]
+extern crate std;
+#[cfg(feature = "std")]
+extern crate alloc;
+
+#[cfg(feature = "std")]
+use std::{sync::Arc, task::Wake, thread};
+#[cfg(feature = "std")]
+use alloc::boxed::Box;
+
+#[cfg(not(feature = "std"))]
+use core::{
+    pin::Pin,
+    task::{RawWaker, RawWakerVTable},
+};
+
+#[cfg(not(feature = "std"))]
+static VTABLE: RawWakerVTable = RawWakerVTable::new(
+    |_| RawWaker::new(core::ptr::null(), &VTABLE),
+    |_| {},
+    |_| {},
+    |_| {},
+);
+
+#[cfg(feature = "std")]
 struct ThreadWaker {
     thread: std::thread::Thread,
 }
 
+#[cfg(feature = "std")]
 impl Wake for ThreadWaker {
     fn wake(self: Arc<Self>) {
         self.thread.unpark();
@@ -41,21 +66,45 @@ where
 {
     type Output = F::Output;
 
-    fn wait(self) -> Self::Output
+    #[cfg_attr(feature = "std", allow(unused_mut))]
+    fn wait(mut self) -> Self::Output
     where
         Self: Sized,
     {
-        let thread_waker = Arc::new(ThreadWaker {
+        #[cfg(feature = "std")]
+        let waker = Arc::new(ThreadWaker {
             thread: thread::current(),
         });
-        let waker = Waker::from(thread_waker);
+        #[cfg(not(feature = "std"))]
+        let waker = {
+            let raw_waker = RawWaker::new(core::ptr::null(), &VTABLE);
+            #[allow(unsafe_code)]
+            unsafe {
+                Waker::from_raw(raw_waker)
+            }
+        };
+
+        let waker = Waker::from(waker);
         let mut context = Context::from_waker(&waker);
+
+        #[cfg(feature = "std")]
         let mut future = Box::pin(self);
+
+        #[cfg(not(feature = "std"))]
+        #[allow(unsafe_code)]
+        let mut future = unsafe { Pin::new_unchecked(&mut self) };
 
         loop {
             match future.as_mut().poll(&mut context) {
                 Poll::Ready(result) => return result,
-                Poll::Pending => thread::park(),
+                Poll::Pending => {
+                    #[cfg(feature = "std")]
+                    thread::park();
+                    #[cfg(not(feature = "std"))]
+                    for _ in 0..100 {
+                        core::hint::spin_loop();
+                    }
+                }
             }
         }
     }
