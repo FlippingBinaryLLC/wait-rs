@@ -1,14 +1,14 @@
 [package]
 authors = ["Jon Musselwhite"]
 categories = ["asynchronous", "concurrency"]
-description = "Syntactic sugar for blocking on async functions outside of an async context."
+description = "Syntactic sugar for calling async functions outside of an async context."
 edition = "2021"
 keywords = ["async", "futures", "await", "blocking", "synchronization"]
 license = "MIT OR Apache-2.0"
 name = "wait"
 repository = "https://github.com/FlippingBinaryLLC/wait-rs"
 rust-version = "1.56.1"
-version = "0.1.0"
+version = "0.1.1"
 
 [lints.rust]
 unsafe_code = "forbid"

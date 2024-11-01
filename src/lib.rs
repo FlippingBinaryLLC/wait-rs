@@ -17,23 +17,22 @@ impl Wake for ThreadWaker {
     }
 }
 
-/// The `Waitable` trait defines a method that is implemented for all
-/// [`Future`] types. This allows you to call the `.wait()` method on any
-/// `Future` outside of an `async` context.
+/// The `Waitable` trait declares the `.wait()` method.
+///
+/// This trait is implemented for all types that implement the [`Future`]
+/// trait. All `async` functions return a `Future`, so this attaches the
+/// `.wait()` method to every `async` function. When called, the `.wait()`
+/// puts the thread to sleep until the `Future` is ready to return a value.
 pub trait Waitable {
+    /// This is set to the return type of the `Future`.
     type Output;
 
+    /// Put the thread to sleep until the `Future` is ready to return a value.
     fn wait(self) -> Self::Output
     where
         Self: Sized;
 }
 
-/// This is the implementation of the [`Waitable`] trait for every `Future`.
-/// All `async` functions return a `Future`, so this attaches the `.wait()`
-/// method to every `async` function.
-///
-/// All it does is put the thread to sleep until the [`Future`] is ready
-/// to return a value.
 impl<F> Waitable for F
 where
     F: Future,
@@ -60,14 +59,14 @@ where
     }
 }
 
-pub mod preamble {
-    //! This is a convenience module that re-exports the `Waitable` trait so that
-    //! every `async` function can be resolved with a call to the `.wait()`
-    //! method outside of an `async` context.
+pub mod prelude {
+    //! This is a convenience module that makes the magic happen.
+    //!
+    //! The alternative is to import the [`Waitable`] trait directly.
     //!
     //! # Example
     //! ```rust
-    //! use wait::preamble::*;
+    //! use wait::prelude::*;
     //!
     //! async fn add(a: usize, b: usize) -> usize {
     //!    a + b
@@ -79,13 +78,19 @@ pub mod preamble {
     //! }
     //! ```
 
+    pub use super::Waitable as _;
+}
+
+#[doc(hidden)]
+#[deprecated(since = "0.1.1", note = "use `wait::prelude::*` instead")]
+pub mod preamble {
     #[doc(hidden)]
     pub use super::Waitable as _;
 }
 
 #[cfg(test)]
 mod tests {
-    use super::preamble::*;
+    use super::prelude::*;
 
     async fn add(a: usize, b: usize) -> usize {
         a + b

@@ -35,10 +35,10 @@ It's as easy as 1, 2, 3.
 wait = "0.1"
 ```
 
-**Step 2**: Add the preamble to the top of any file where you want to use it:
+**Step 2**: Add the prelude to the top of any file where you want to use it:
 
 ```rust
-use wait::preamble::*;
+use wait::prelude::*;
 ```
 
 **Step 3**: Use the `.wait()` method on any `async` function instead of `.await`.
@@ -46,7 +46,7 @@ use wait::preamble::*;
 ## Example
 
 ```rust
-use wait::preamble::*;
+use wait::prelude::*;
 
 async fn add(a: i32, b: i32) -> i32 {
     a + b
