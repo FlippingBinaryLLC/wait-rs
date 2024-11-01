@@ -86,6 +86,20 @@ Getting started with **Wait For Rust** is straightforward:
 
 4. Profit
 
+## Building with `no_std`
+
+This crate is `no_std` compatible. To use it in a `no_std` environment,
+disable the default features in your `Cargo.toml`:
+
+```toml
+[dependencies]
+wait = { version = "0.1", default-features = false }
+```
+
+This is not an ideal solution because it has to busy wait. The crate attempts
+to reduce energy consumption by letting the CPU know that it is in a busy
+loop, but it is still not as efficient as a proper `async` runtime can be.
+
 ## Is This Library Necessary?
 
 While you might not need this library for every project, it provides a
@@ -97,11 +111,12 @@ solutions.
 ## Acknowledgements
 
 This crate is built on the shoulders of giants. Rust futures are complicated,
-but popular libraries like `tokio`, `async-std`, and `futures-rs` are
-incredible resources for learning how futures work. We thank the maintainers
-and contributors of these libraries and the broader Rust community for all of
-their hard work and dedication. Additionally, the CI workflow for this
-repository is heavily based on the one in the `futures-rs` repository.
+but popular libraries like `tokio`, `async-std`, `futures-rs`, and `embassy`
+are incredible resources for learning how futures work. We thank the
+maintainers and contributors of these libraries and the broader Rust
+community for all of their hard work and dedication. Additionally, the CI
+workflow for this repository is heavily based on the one in the `futures-rs`
+repository.
 
 ## License
 
