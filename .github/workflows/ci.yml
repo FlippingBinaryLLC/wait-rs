@@ -45,7 +45,10 @@ jobs:
         with:
           target: ${{ matrix.target }}
         if: matrix.target != ''
-      - run: cargo test --all-features $DOCTEST_XCOMPILE
+      - name: Test with no features
+        run: cargo test --no-default-features
+      - name: Test with all features
+        run: cargo test --all-features
 
   build:
     name: cargo +${{ matrix.rust }} build
@@ -64,7 +67,10 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-      - run: cargo build --tests
+      - name: Build with no features
+        run: cargo build --no-default-features --tests
+      - name: Build with all features
+        run: cargo build --all-features --tests
 
   clippy:
     name: cargo clippy
@@ -76,7 +82,10 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy
-      - run: cargo clippy --all-features --all-targets
+      - name: Clippy with no features
+        run: cargo clippy --no-default-features --all-targets
+      - name: Clippy with all features
+        run: cargo clippy --all-features --all-targets
 
   fmt:
     name: cargo fmt
