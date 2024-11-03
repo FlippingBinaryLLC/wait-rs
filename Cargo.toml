@@ -15,9 +15,19 @@ exclude = [".gitignore", ".github", ".markdownlint.jsonc"]
 [features]
 default = ["std"]
 std = []
+tokio = ["dep:tokio"]
+
+[dependencies.tokio]
+default-features = false
+features = ["rt-multi-thread"]
+optional = true
+version = "1.41"
 
 [lints.rust]
 unsafe_code = "deny"
 
 [badges]
 maintenance = { status = "passively-maintained" }
+
+[dev-dependencies]
+reqwest = "0.12"

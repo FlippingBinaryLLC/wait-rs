@@ -3,7 +3,7 @@
     alt="A humanoid rests their chin in their hand, looking bored"
     src="https://flippingbinary.com/wait-rs/logo-square.png" width="400"></a>
 
-Wait For Rust
+Wait for Rust
 
 </h1>
 
@@ -23,7 +23,7 @@ Wait For Rust
 </a>
 </p>
 
-**Wait For Rust** simplifies the integration of asynchronous code into
+**Wait for Rust** simplifies the integration of asynchronous code into
 synchronous applications without the need to rewrite your entire application
 as `async`.
 
@@ -37,20 +37,21 @@ applications. You might want to use an external library that only provides
 Common solutions include:
 
 - Making the entire application `async`, which adds overhead and complexity.
-- Using `block_on(async {})`, which introduces dependencies and boilerplate code.
+- Using `block_on(async {})`, which adds boilerplate code and usually makes
+  your dependency tree much larger.
 
 Additionally, holding a `Mutex` lock across an `async` boundary can be
 dangerous and lead to deadlocks or other concurrency issues.
 
 ## Solution
 
-The **Wait For Rust** crate provides a simple and elegant solution. It allows
+The **Wait for Rust** crate provides a simple and elegant solution. It allows
 you to call `async` functions from synchronous contexts without coloring your
 functions with `async`.
 
 ## Usage
 
-Getting started with **Wait For Rust** is straightforward:
+Getting started with **Wait for Rust** is straightforward:
 
 1. Either add the crate with `cargo add wait` or add it to your `Cargo.toml`
    manually:
@@ -60,19 +61,34 @@ Getting started with **Wait For Rust** is straightforward:
    wait = "0.2"
    ```
 
+   If you want to use an `async` function that explicitly requires the
+   `tokio` runtime, you must enable the `tokio` feature or your code will
+   panic at runtime. Enabling this feature brings in the minimum dependencies
+   necessary to support running `tokio`-dependent code. Either add the
+   feature while adding the crate with `cargo add wait --features tokio` or
+   add it to your `Cargo.toml` manually:
+
+   ```toml
+   [dependencies]
+   wait = { version = "0.2", features = ["tokio"] }
+   ```
+
+   **NOTE:** This is only necessary if your code panics with a message like
+   `there is no reactor running, must be called from the context of a Tokio 1.x runtime`.
+
 2. Use the `.wait()` method on any `async` function instead of `.await`:
 
    ```rust
    // The prelude attaches the `.wait()` method to all `async` functions
    use wait::prelude::*;
 
-   // Define an async function or use one from an external library
+   // Define an `async` function or use one from an external library
    async fn add(a: i32, b: i32) -> i32 {
        a + b
    }
 
    fn main() {
-       // Call the async function using .wait()
+       // Call the `async` function using .wait()
        let val = add(2, 2).wait();
        println!("Result: {}", val);
    }

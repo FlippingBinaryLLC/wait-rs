@@ -47,6 +47,10 @@ jobs:
         if: matrix.target != ''
       - name: Test with no features
         run: cargo test --no-default-features
+      - name: Test with only `std` feature
+        run: cargo test --no-default-features --features std
+      - name: Test with only `tokio` feature
+        run: cargo test --no-default-features --features tokio
       - name: Test with all features
         run: cargo test --all-features
 
@@ -69,6 +73,10 @@ jobs:
           toolchain: ${{ matrix.rust }}
       - name: Build with no features
         run: cargo build --no-default-features --tests
+      - name: Build with only `std` feature
+        run: cargo build --no-default-features --features std --tests
+      - name: Build with only `tokio` feature
+        run: cargo build --no-default-features --features tokio --tests
       - name: Build with all features
         run: cargo build --all-features --tests
 
@@ -84,6 +92,10 @@ jobs:
           components: clippy
       - name: Clippy with no features
         run: cargo clippy --no-default-features --all-targets
+      - name: Clippy with only `std` feature
+        run: cargo clippy --no-default-features --features std --all-targets
+      - name: Clippy with only `tokio` feature
+        run: cargo clippy --no-default-features --features tokio --all-targets
       - name: Clippy with all features
         run: cargo clippy --all-features --all-targets
 

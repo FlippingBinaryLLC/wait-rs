@@ -1,46 +1,18 @@
 #![no_std]
 #![doc = include_str!("../README.md")]
 
-use core::{
-    future::Future,
-    task::{Context, Poll, Waker},
-};
+use core::future::Future;
 
-#[cfg(feature = "std")]
-extern crate alloc;
-#[cfg(feature = "std")]
-extern crate std;
+#[cfg(not(feature = "tokio"))]
+use core::task::{Context, Poll, Waker};
 
-#[cfg(feature = "std")]
-use alloc::boxed::Box;
-#[cfg(feature = "std")]
-use std::{sync::Arc, task::Wake, thread};
-
-#[cfg(not(feature = "std"))]
-use core::{
-    pin::Pin,
-    task::{RawWaker, RawWakerVTable},
-};
-
-#[cfg(not(feature = "std"))]
-static VTABLE: RawWakerVTable = RawWakerVTable::new(
-    |_| RawWaker::new(core::ptr::null(), &VTABLE),
+#[cfg(all(not(feature = "tokio"), not(feature = "std")))]
+static VTABLE: core::task::RawWakerVTable = core::task::RawWakerVTable::new(
+    |_| core::task::RawWaker::new(core::ptr::null(), &VTABLE),
     |_| {},
     |_| {},
     |_| {},
 );
-
-#[cfg(feature = "std")]
-struct ThreadWaker {
-    thread: std::thread::Thread,
-}
-
-#[cfg(feature = "std")]
-impl Wake for ThreadWaker {
-    fn wake(self: Arc<Self>) {
-        self.thread.unpark();
-    }
-}
 
 /// The `Waitable` trait declares the `.wait()` method.
 ///
@@ -60,53 +32,95 @@ pub trait Waitable: sealed::Sealed {
 
 impl<F> sealed::Sealed for F where F: Future {}
 
+#[cfg(all(not(feature = "tokio"), feature = "std"))]
+fn std_wait_block_on<F>(fut: F) -> F::Output
+where
+    F: Future + Sized,
+{
+    extern crate alloc;
+    extern crate std;
+
+    use std::thread;
+
+    use alloc::{boxed::Box, sync::Arc, task::Wake};
+
+    struct ThreadWaker {
+        thread: thread::Thread,
+    }
+
+    impl Wake for ThreadWaker {
+        fn wake(self: Arc<Self>) {
+            self.thread.unpark();
+        }
+    }
+
+    let waker = Arc::new(ThreadWaker {
+        thread: thread::current(),
+    });
+
+    let waker = Waker::from(waker);
+    let mut context = Context::from_waker(&waker);
+
+    let mut future = Box::pin(fut);
+
+    loop {
+        match future.as_mut().poll(&mut context) {
+            Poll::Ready(result) => return result,
+            Poll::Pending => {
+                thread::park();
+            }
+        }
+    }
+}
+
+#[cfg(all(not(feature = "tokio"), not(feature = "std")))]
+fn nostd_wait_block_on<F>(mut fut: F) -> F::Output
+where
+    F: Future + Sized,
+{
+    use core::{hint::spin_loop, pin::Pin, ptr::null, task::RawWaker};
+
+    let waker = {
+        let raw_waker = RawWaker::new(null(), &VTABLE);
+        #[allow(unsafe_code)]
+        unsafe {
+            Waker::from_raw(raw_waker)
+        }
+    };
+
+    #[allow(unsafe_code)]
+    let mut future = unsafe { Pin::new_unchecked(&mut fut) };
+
+    let mut context = Context::from_waker(&waker);
+
+    loop {
+        match future.as_mut().poll(&mut context) {
+            Poll::Ready(result) => return result,
+            Poll::Pending => {
+                for _ in 0..100 {
+                    spin_loop();
+                }
+            }
+        }
+    }
+}
+
 impl<F> Waitable for F
 where
     F: Future,
 {
     type Output = F::Output;
 
-    #[cfg_attr(feature = "std", allow(unused_mut))]
-    fn wait(mut self) -> Self::Output
+    fn wait(self) -> Self::Output
     where
         Self: Sized,
     {
-        #[cfg(feature = "std")]
-        let waker = Arc::new(ThreadWaker {
-            thread: thread::current(),
-        });
-        #[cfg(not(feature = "std"))]
-        let waker = {
-            let raw_waker = RawWaker::new(core::ptr::null(), &VTABLE);
-            #[allow(unsafe_code)]
-            unsafe {
-                Waker::from_raw(raw_waker)
-            }
-        };
-
-        let waker = Waker::from(waker);
-        let mut context = Context::from_waker(&waker);
-
-        #[cfg(feature = "std")]
-        let mut future = Box::pin(self);
-
-        #[cfg(not(feature = "std"))]
-        #[allow(unsafe_code)]
-        let mut future = unsafe { Pin::new_unchecked(&mut self) };
-
-        loop {
-            match future.as_mut().poll(&mut context) {
-                Poll::Ready(result) => return result,
-                Poll::Pending => {
-                    #[cfg(feature = "std")]
-                    thread::park();
-                    #[cfg(not(feature = "std"))]
-                    for _ in 0..100 {
-                        core::hint::spin_loop();
-                    }
-                }
-            }
-        }
+        #[cfg(all(not(feature = "tokio"), feature = "std"))]
+        return std_wait_block_on(self);
+        #[cfg(all(not(feature = "tokio"), not(feature = "std")))]
+        return nostd_wait_block_on(self);
+        #[cfg(feature = "tokio")]
+        return tokio::runtime::Runtime::new().unwrap().block_on(self);
     }
 }
 
@@ -174,5 +188,13 @@ mod tests {
         let result = mul(2, 3).wait();
 
         assert_eq!(result, 6);
+    }
+
+    // Test the tokio runtime with reqwest only if tokio feature is enabled
+    #[cfg(feature = "tokio")]
+    #[test]
+    fn test_when_tokio_is_required() {
+        let response = reqwest::get("https://www.rust-lang.org").wait().unwrap();
+        assert!(response.status().is_success());
     }
 }
