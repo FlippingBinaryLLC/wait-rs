@@ -1,12 +1,12 @@
 #![no_std]
 #![doc = include_str!("../README.md")]
 
-use core::{
-    future::Future,
-    task::{Context, Poll, Waker},
-};
+use core::future::Future;
 
-#[cfg(not(feature = "std"))]
+#[cfg(not(feature = "tokio"))]
+use core::task::{Context, Poll, Waker};
+
+#[cfg(all(not(feature = "tokio"), not(feature = "std")))]
 static VTABLE: core::task::RawWakerVTable = core::task::RawWakerVTable::new(
     |_| core::task::RawWaker::new(core::ptr::null(), &VTABLE),
     |_| {},
@@ -32,7 +32,7 @@ pub trait Waitable: sealed::Sealed {
 
 impl<F> sealed::Sealed for F where F: Future {}
 
-#[cfg(feature = "std")]
+#[cfg(all(not(feature = "tokio"), feature = "std"))]
 fn std_wait_block_on<F>(fut: F) -> F::Output
 where
     F: Future + Sized,
@@ -73,7 +73,7 @@ where
     }
 }
 
-#[cfg(not(feature = "std"))]
+#[cfg(all(not(feature = "tokio"), not(feature = "std")))]
 fn nostd_wait_block_on<F>(mut fut: F) -> F::Output
 where
     F: Future + Sized,
@@ -115,10 +115,12 @@ where
     where
         Self: Sized,
     {
-        #[cfg(feature = "std")]
+        #[cfg(all(not(feature = "tokio"), feature = "std"))]
         return std_wait_block_on(self);
-        #[cfg(not(feature = "std"))]
+        #[cfg(all(not(feature = "tokio"), not(feature = "std")))]
         return nostd_wait_block_on(self);
+        #[cfg(feature = "tokio")]
+        return tokio::runtime::Runtime::new().unwrap().block_on(self);
     }
 }
 
@@ -186,5 +188,13 @@ mod tests {
         let result = mul(2, 3).wait();
 
         assert_eq!(result, 6);
+    }
+
+    // Test the tokio runtime with reqwest only if tokio feature is enabled
+    #[cfg(feature = "tokio")]
+    #[test]
+    fn test_when_tokio_is_required() {
+        let response = reqwest::get("https://www.rust-lang.org").wait().unwrap();
+        assert!(response.status().is_success());
     }
 }
