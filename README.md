@@ -61,6 +61,21 @@ Getting started with **Wait for Rust** is straightforward:
    wait = "0.2"
    ```
 
+   If you want to use an `async` function that explicitly requires the
+   `tokio` runtime, you must enable the `tokio` feature or your code will
+   panic at runtime. Enabling this feature brings in the minimum dependencies
+   necessary to support running `tokio`-dependent code. Either add the
+   feature while adding the crate with `cargo add wait --features tokio` or
+   add it to your `Cargo.toml` manually:
+
+   ```toml
+   [dependencies]
+   wait = { version = "0.2", features = ["tokio"] }
+   ```
+
+   **NOTE:** This is only necessary if your code panics with a message like
+   `there is no reactor running, must be called from the context of a Tokio 1.x runtime`.
+
 2. Use the `.wait()` method on any `async` function instead of `.await`:
 
    ```rust
