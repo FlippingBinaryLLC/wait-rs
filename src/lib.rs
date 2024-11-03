@@ -60,53 +60,60 @@ pub trait Waitable: sealed::Sealed {
 
 impl<F> sealed::Sealed for F where F: Future {}
 
+#[cfg_attr(feature = "std", allow(unused_mut))]
+fn wait_block_on<F>(mut fut: F) -> F::Output
+where
+    F: Future + Sized,
+{
+    #[cfg(feature = "std")]
+    let waker = Arc::new(ThreadWaker {
+        thread: thread::current(),
+    });
+    #[cfg(not(feature = "std"))]
+    let waker = {
+        let raw_waker = RawWaker::new(core::ptr::null(), &VTABLE);
+        #[allow(unsafe_code)]
+        unsafe {
+            Waker::from_raw(raw_waker)
+        }
+    };
+
+    let waker = Waker::from(waker);
+    let mut context = Context::from_waker(&waker);
+
+    #[cfg(feature = "std")]
+    let mut future = Box::pin(fut);
+
+    #[cfg(not(feature = "std"))]
+    #[allow(unsafe_code)]
+    let mut future = unsafe { Pin::new_unchecked(&mut fut) };
+
+    loop {
+        match future.as_mut().poll(&mut context) {
+            Poll::Ready(result) => return result,
+            Poll::Pending => {
+                #[cfg(feature = "std")]
+                thread::park();
+                #[cfg(not(feature = "std"))]
+                for _ in 0..100 {
+                    core::hint::spin_loop();
+                }
+            }
+        }
+    }
+}
+
 impl<F> Waitable for F
 where
     F: Future,
 {
     type Output = F::Output;
 
-    #[cfg_attr(feature = "std", allow(unused_mut))]
-    fn wait(mut self) -> Self::Output
+    fn wait(self) -> Self::Output
     where
         Self: Sized,
     {
-        #[cfg(feature = "std")]
-        let waker = Arc::new(ThreadWaker {
-            thread: thread::current(),
-        });
-        #[cfg(not(feature = "std"))]
-        let waker = {
-            let raw_waker = RawWaker::new(core::ptr::null(), &VTABLE);
-            #[allow(unsafe_code)]
-            unsafe {
-                Waker::from_raw(raw_waker)
-            }
-        };
-
-        let waker = Waker::from(waker);
-        let mut context = Context::from_waker(&waker);
-
-        #[cfg(feature = "std")]
-        let mut future = Box::pin(self);
-
-        #[cfg(not(feature = "std"))]
-        #[allow(unsafe_code)]
-        let mut future = unsafe { Pin::new_unchecked(&mut self) };
-
-        loop {
-            match future.as_mut().poll(&mut context) {
-                Poll::Ready(result) => return result,
-                Poll::Pending => {
-                    #[cfg(feature = "std")]
-                    thread::park();
-                    #[cfg(not(feature = "std"))]
-                    for _ in 0..100 {
-                        core::hint::spin_loop();
-                    }
-                }
-            }
-        }
+        wait_block_on(self)
     }
 }
 
