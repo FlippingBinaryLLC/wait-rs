@@ -31,3 +31,7 @@ maintenance = { status = "passively-maintained" }
 
 [dev-dependencies]
 reqwest = "0.12"
+
+[[example]]
+name = "when_tokio_is_required"
+required-features = ["tokio"]
