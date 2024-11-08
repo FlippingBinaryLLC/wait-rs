@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 name = "wait"
 repository = "https://github.com/FlippingBinaryLLC/wait-rs"
 rust-version = "1.56.1"
-version = "0.2.2"
+version = "0.2.3"
 
 exclude = [".gitignore", ".github", ".markdownlint.jsonc"]
 
