@@ -106,6 +106,18 @@ where
     }
 }
 
+#[cfg(feature = "tokio")]
+fn tokio_wait_block_on<F>(fut: F) -> F::Output
+where
+    F: Future + Sized,
+{
+    if tokio::runtime::Handle::try_current().is_ok() {
+        tokio::task::block_in_place(|| tokio::runtime::Handle::current().block_on(fut))
+    } else {
+        tokio::runtime::Runtime::new().unwrap().block_on(fut)
+    }
+}
+
 impl<F> Waitable for F
 where
     F: Future,
@@ -121,7 +133,7 @@ where
         #[cfg(all(not(feature = "tokio"), not(feature = "std")))]
         return nostd_wait_block_on(self);
         #[cfg(feature = "tokio")]
-        return tokio::runtime::Runtime::new().unwrap().block_on(self);
+        return tokio_wait_block_on(self);
     }
 }
 
@@ -182,6 +194,18 @@ mod tests {
     #[test]
     fn test_when_tokio_is_required() {
         let response = reqwest::get("https://www.rust-lang.org").wait().unwrap();
+        assert!(response.status().is_success());
+    }
+
+    #[cfg(feature = "tokio")]
+    #[test]
+    fn test_when_used_inside_tokio_runtime() {
+        let runtime = tokio::runtime::Runtime::new().unwrap();
+
+        let response = runtime
+            .block_on(async { reqwest::get("https://www.rust-lang.org").wait() })
+            .unwrap();
+
         assert!(response.status().is_success());
     }
 }
