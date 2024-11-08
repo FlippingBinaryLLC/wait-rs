@@ -29,100 +29,60 @@ Wait for Rust
 
 **Wait for Rust** simplifies the integration of asynchronous code into
 synchronous applications without the need to rewrite your entire application
-as `async`.
+as `async` or add a bulky runtime just to use `block_on()`.
 
-## Problem Statement
+## Installation
 
-In Rust, using `async` can be a double-edged sword. While it's powerful for
-I/O-bound operations, it can introduce unnecessary complexity in CPU-bound
-applications. You might want to use an external library that only provides
-`async` functions without making your entire application asynchronous.
-
-Common solutions include:
-
-- Making the entire application `async`, which adds overhead and complexity.
-- Using `block_on(async {})`, which adds boilerplate code and usually makes
-  your dependency tree much larger.
-
-Additionally, holding a `Mutex` lock across an `async` boundary can be
-dangerous and lead to deadlocks or other concurrency issues.
-
-## Solution
-
-The **Wait for Rust** crate provides a simple and elegant solution. It allows
-you to call `async` functions from synchronous contexts without coloring your
-functions with `async`.
+Either use `cargo add wait` or add it to your `Cargo.toml` manually. You can
+also add the `tokio` feature if your `async` function requires it (like
+`reqwest` does, for example).
 
 ## Usage
 
 Getting started with **Wait for Rust** is straightforward:
 
-1. Either add the crate with `cargo add wait` or add it to your `Cargo.toml`
-   manually:
+**Step 1**: Add the prelude to your application:
 
-   ```toml
-   [dependencies]
-   wait = "0.2"
-   ```
+```rust
+use wait::prelude::*;
+```
 
-   If you want to use an `async` function that explicitly requires the
-   `tokio` runtime, you must enable the `tokio` feature or your code will
-   panic at runtime. Enabling this feature brings in the minimum dependencies
-   necessary to support running `tokio`-dependent code. Either add the
-   feature while adding the crate with `cargo add wait --features tokio` or
-   add it to your `Cargo.toml` manually:
+**Step 2**: Call the `.wait()` method instead of `.await` even though your
+function is not also `async`:
 
-   ```toml
-   [dependencies]
-   wait = { version = "0.2", features = ["tokio"] }
-   ```
+```rust
+let body = reqwest::get("https://www.rust-lang.org")
+  .wait()?
+  .text()
+  .wait()?;
 
-   **NOTE:** This is only necessary if your code panics with a message like
-   `there is no reactor running, must be called from the context of a Tokio 1.x runtime`.
+println!("body = {body:?}");
+```
 
-2. Use the `.wait()` method on any `async` function instead of `.await`:
+**Step 3**: ????
 
-   ```rust
-   // The prelude attaches the `.wait()` method to all `async` functions
-   use wait::prelude::*;
+**Step 4**: Profit
 
-   // Define an `async` function or use one from an external library
-   async fn add(a: i32, b: i32) -> i32 {
-       a + b
-   }
-
-   fn main() {
-       // Call the `async` function using .wait()
-       let val = add(2, 2).wait();
-       println!("Result: {}", val);
-   }
-   ```
-
-3. ????
-
-4. Profit
+You can see the complete example in the [`examples`] folder.
 
 ## Building with `no_std`
 
-This crate is `no_std` compatible. To use it in a `no_std` environment,
-disable the default features in your `Cargo.toml`:
+This crate is `no_std` by default with libraries from `std` and `alloc` only
+pulled in when the `std` feature flag is enabled (which it is by default).
+The `tokio` feature flag brings in a `tokio` runtime, which also requires
+`std`.
 
-```toml
-[dependencies]
-wait = { version = "0.2", default-features = false }
-```
+Without the `std` feature flag, this library uses a hot loop to wait for the
+`Future` to complete. This is not ideal, so it should only be used when
+absolutely necessary.
 
-This is not an ideal solution because it has to busy wait. The crate attempts
-to reduce energy consumption by letting the CPU know that it is in a busy
-loop, but it is still not as efficient as a proper `async` runtime can be.
+## Troubleshooting
 
-## Is This Library Necessary?
+If your application panics with the message `there is no reactor running,
+must be called from the context of a Tokio 1.x runtime`, you can fix this by
+enabling the `tokio` feature flag in your crate.
 
-While you might not need this library for every project, it provides a
-convenient way to integrate `async` functions into synchronous code. This
-crate has no dependencies, so it won't add significantly to your build time.
-It also reduces the boilerplate and complexity that often comes with other
-solutions.
+If you encounter any other problems, please [open an issue] on GitHub.
 
 ## Acknowledgements
 
@@ -136,10 +96,15 @@ repository.
 
 ## License
 
-Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
-[MIT license](LICENSE-MIT) at your option.
+Licensed under either of the [Apache License, Version 2.0][APACHE-2.0] or the
+[MIT license][MIT] at your option.
 
 Unless you explicitly state otherwise, any contribution intentionally
 submitted for inclusion in the work by you, as defined in the Apache-2.0
 license, shall be dual licensed as above, without any additional terms or
 conditions.
+
+[`examples`]: https://github.com/FlippingBinaryLLC/wait-rs/tree/main/examples
+[open an issue]: https://github.com/FlippingBinaryLLC/wait-rs/issues
+[APACHE-2.0]: https://www.apache.org/licenses/LICENSE-2.0
+[MIT]: https://opensource.org/licenses/MIT
