@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3](https://github.com/FlippingBinaryLLC/wait-rs/compare/v0.2.2...v0.2.3) - 2024-11-08
+
+### Fixed
+
+- Doc-test should ignore the incomplete example in the `README.md`
+- Ensure `tokio` feature is enabled when building example that requires it
+
+### Other
+
+- Simplify the main docs
+- Add link to GitHub repository in `README.md`
+- Improve clarity of prelude documentation
+- Add favicon
+- Add clarification in example
+
 ## [0.2.2](https://github.com/FlippingBinaryLLC/wait-rs/compare/v0.2.1...v0.2.2) - 2024-11-03
 
 ### Added
