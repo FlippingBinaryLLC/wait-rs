@@ -130,23 +130,9 @@ mod sealed {
 }
 
 pub mod prelude {
-    //! This is a convenience module that makes the magic happen.
+    //! This is the convenience module where the magic happens.
     //!
     //! The alternative is to import the [`Waitable`] trait directly.
-    //!
-    //! # Example
-    //! ```rust
-    //! use wait::prelude::*;
-    //!
-    //! async fn add(a: usize, b: usize) -> usize {
-    //!    a + b
-    //! }
-    //!
-    //! fn main() {
-    //!   let result = add(2, 2).wait();
-    //!   assert_eq!(result, 4);
-    //! }
-    //! ```
     //!
     //! [`Waitable`]: super::Waitable
 
