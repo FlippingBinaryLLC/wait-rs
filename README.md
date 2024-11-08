@@ -50,7 +50,7 @@ use wait::prelude::*;
 **Step 2**: Call the `.wait()` method instead of `.await` even though your
 function is not also `async`:
 
-```rust
+```rust ignore
 let body = reqwest::get("https://www.rust-lang.org")
   .wait()?
   .text()
