@@ -21,6 +21,10 @@ Wait for Rust
 <a href="https://docs.rs/wait">
   Documentation
 </a>
+  -
+<a href="https://github.com/FlippingBinaryLLC/wait-rs">
+  Website
+</a>
 </p>
 
 **Wait for Rust** simplifies the integration of asynchronous code into
