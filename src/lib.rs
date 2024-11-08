@@ -1,5 +1,6 @@
 #![no_std]
 #![doc = include_str!("../README.md")]
+#![doc(html_favicon_url = "https://flippingbinary.com/wait-rs/favicon.ico")]
 
 use core::future::Future;
 
