@@ -34,8 +34,8 @@ as `async` or add a bulky runtime just to use `block_on()`.
 ## Installation
 
 Either use `cargo add wait` or add it to your `Cargo.toml` manually. You can
-also add the `tokio` feature if your `async` function requires it (like
-`reqwest` does, for example).
+also add the `tokio` feature if you are calling an `async` function that
+requires it (like a `reqwest` method, for example).
 
 ## Usage
 
@@ -47,8 +47,8 @@ Getting started with **Wait for Rust** is straightforward:
 use wait::prelude::*;
 ```
 
-**Step 2**: Call the `.wait()` method instead of `.await` even though your
-function is not also `async`:
+**Step 2**: Call the `.wait()` method instead of `.await` from within any
+function, method, or closure, even if it's not an `async` context:
 
 ```rust ignore
 let body = reqwest::get("https://www.rust-lang.org")
@@ -86,7 +86,7 @@ If you encounter any other problems, please [open an issue] on GitHub.
 
 ## Acknowledgements
 
-This crate is built on the shoulders of giants. Rust futures are complicated,
+This crate rests on the shoulders of giants. Rust futures are complicated,
 but popular libraries like `tokio`, `async-std`, `futures-rs`, and `embassy`
 are incredible resources for learning how futures work. We thank the
 maintainers and contributors of these libraries and the broader Rust
