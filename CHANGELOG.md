@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5](https://github.com/FlippingBinaryLLC/wait-rs/compare/v0.2.4...v0.2.5) - 2024-11-09
+
+### Fixed
+
+- It should not panic if run from a `tokio` runtime without I/O or timer drivers
+
+### Other
+
+- Relax tokio dependency version to improve flexibility
+- Switch to tokio/rt instead of tokio/r-multi-thread
+- Remove ambiguity around "by default" phrase
+
 ## [0.2.4](https://github.com/FlippingBinaryLLC/wait-rs/compare/v0.2.3...v0.2.4) - 2024-11-08
 
 ### Fixed
