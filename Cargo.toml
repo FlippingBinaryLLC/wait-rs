@@ -19,7 +19,7 @@ tokio = ["dep:tokio"]
 
 [dependencies.tokio]
 default-features = false
-features = ["rt-multi-thread"]
+features = ["rt"]
 optional = true
 version = "1.41"
 
