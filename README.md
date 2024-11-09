@@ -67,10 +67,10 @@ You can see the complete example in the [`examples`] folder.
 
 ## Building with `no_std`
 
-This crate is `no_std` by default with libraries from `std` and `alloc` only
-pulled in when the `std` feature flag is enabled (which it is by default).
-The `tokio` feature flag brings in a `tokio` runtime, which also requires
-`std`.
+This crate is `no_std` so that modules from `std` and `alloc` are only pulled
+in when the `std` feature flag is enabled (which it is by default). Even
+though this crate can work with `no_std`, the `tokio` feature flag brings in
+a `tokio` runtime, which does require `std`.
 
 Without the `std` feature flag, this library uses a hot loop to wait for the
 `Future` to complete. This is not ideal, so it should only be used when
@@ -80,7 +80,11 @@ absolutely necessary.
 
 If your application panics with the message `there is no reactor running,
 must be called from the context of a Tokio 1.x runtime`, you can fix this by
-enabling the `tokio` feature flag in your crate.
+enabling the `tokio` feature flag in your crate. Unfortunately, this means
+you wind up using a `tokio` runtime under the hood, but this crate disables
+all but the minimum required features of `tokio` that are necessary for it to
+work. It also manages the runtime for you so you can use `.wait()` exactly
+the same.
 
 If you encounter any other problems, please [open an issue] on GitHub.
 
