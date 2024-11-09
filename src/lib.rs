@@ -111,10 +111,24 @@ fn tokio_wait_block_on<F>(fut: F) -> F::Output
 where
     F: Future + Sized,
 {
-    if tokio::runtime::Handle::try_current().is_ok() {
-        tokio::task::block_in_place(|| tokio::runtime::Handle::current().block_on(fut))
+    if let Ok(handle) = tokio::runtime::Handle::try_current() {
+        if handle.runtime_flavor() == tokio::runtime::RuntimeFlavor::CurrentThread {
+            panic!("Cannot block on a future from within a CurrentThread runtime");
+        } else {
+            tokio::task::block_in_place(|| {
+                tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .unwrap()
+                    .block_on(fut)
+            })
+        }
     } else {
-        tokio::runtime::Runtime::new().unwrap().block_on(fut)
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(fut)
     }
 }
 
@@ -192,17 +206,30 @@ mod tests {
     // Test the tokio runtime with reqwest only if tokio feature is enabled
     #[cfg(feature = "tokio")]
     #[test]
-    fn test_when_tokio_is_required() {
+    fn test_on_future_that_requires_tokio() {
         let response = reqwest::get("https://www.rust-lang.org").wait().unwrap();
         assert!(response.status().is_success());
     }
 
     #[cfg(feature = "tokio")]
     #[test]
-    fn test_when_used_inside_tokio_runtime() {
-        let runtime = tokio::runtime::Runtime::new().unwrap();
+    #[should_panic]
+    fn test_inside_single_thread_tokio_runtime() {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap();
 
-        let response = runtime
+        let _ = runtime
+            .block_on(async { reqwest::get("https://www.rust-lang.org").wait() })
+            .is_err();
+    }
+
+    #[cfg(feature = "tokio")]
+    #[test]
+    fn test_inside_multi_thread_tokio_runtime_with_no_timers_or_io() {
+        let response = tokio::runtime::Builder::new_multi_thread()
+            .build()
+            .unwrap()
             .block_on(async { reqwest::get("https://www.rust-lang.org").wait() })
             .unwrap();
 
